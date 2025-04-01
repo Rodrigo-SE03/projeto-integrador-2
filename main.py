@@ -1,12 +1,22 @@
-
 from models import Dados
 from fastapi import FastAPI, Query
-app = FastAPI()
+import pymongo
+import json
 
+app = FastAPI()
+client = pymongo.MongoClient("mongodb://localhost:27017/")
+db = client['projeto_integrador']
+collection = db['leituras']
 
 @app.post("/")
 async def root(dados:Dados):
     print(dados)
+    collection.insert_one({
+        "distancia": dados.distancia,
+        "timestamp": dados.horario,
+        "latitude": dados.latitude,
+        "longitude": dados.longitude
+    })
     return "ok"
 
 @app.get("/")
