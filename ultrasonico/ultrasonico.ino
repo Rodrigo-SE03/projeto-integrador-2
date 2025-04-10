@@ -1,6 +1,5 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
-#include <NTPClient.h>
 #include <math.h>
 #include <WiFiUdp.h>
 
@@ -13,15 +12,22 @@ const int echoPin = 27;
 const int numReadings = 10;
 //define sound speed in cm/uS
 #define SOUND_SPEED 0.034
-WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP, "pool.ntp.org", 0, 3600000);
+String macString = "";
 
 void setup() {
   Serial.begin(115200); // Starts the serial communication
   wifi_connect();
   pinMode(trigPin, OUTPUT); // Sets the trigPin as an Output
   pinMode(echoPin, INPUT); // Sets the echoPin as an Input
-  timeClient.begin();
+  
+  uint8_t mac[6];
+  WiFi.macAddress(mac);
+  for (int i = 0; i < 6; i++) {
+    if (mac[i] < 0x10) {
+      macString += "0";
+    }
+    macString += String(mac[i], HEX);
+  }
 }
 
 void wifi_connect(){
@@ -105,12 +111,13 @@ long get_reading(){
 
 void send_message(float distancia){
   HTTPClient http;
-  http.begin("http://192.168.205.88:81/");
+  http.begin("http://192.168.81.88:81/leituras");
   http.addHeader("Content-Type", "application/json");
  
-  timeClient.update();
-  String horario = timeClient.getFormattedTime();
-  String payload = "{\"distancia\": " + String(distancia) + ", \"horario\": \""+ String(horario) + "\", \"latitude\": 12.345, \"longitude\": 67.890}";
+  String payload = "{\"distancia\": " + String(distancia) + 
+                 "\", \"latitude\": 12.345, \"longitude\": 67.890, \"mac\": \"" + 
+                 macString + "\"}";
+
   Serial.println(payload);
 
   int httpResponseCode = http.POST(payload);

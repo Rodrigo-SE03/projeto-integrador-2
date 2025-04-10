@@ -1,29 +1,25 @@
-from models import Dados
-from fastapi import FastAPI, Query
-import pymongo
-import json
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from routes import leituras, coordenadas
 
 app = FastAPI()
-client = pymongo.MongoClient("mongodb://localhost:27017/")
-db = client['projeto_integrador']
-collection = db['leituras']
 
-@app.post("/")
-async def root(dados:Dados):
-    print(dados)
-    collection.insert_one({
-        "distancia": dados.distancia,
-        "timestamp": dados.horario,
-        "latitude": dados.latitude,
-        "longitude": dados.longitude
-    })
-    return "ok"
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 @app.get("/")
 async def home():
-    print("Hello World")
-    return "Hello World"
+    return {"message": "Hello World"}
     
+app.include_router(leituras.router, prefix="/leituras", tags=["leituras"])
+app.include_router(coordenadas.router, prefix="/coordenadas", tags=["coordenadas"])
 
 if __name__ == "__main__":
     import uvicorn
