@@ -9,7 +9,8 @@ async def get_coordenadas():
         {
             "$project": {
                 "lat": "$latitude",
-                "long": "$longitude"
+                "long": "$longitude",
+                "mac": "$mac",
             }
         }
     ]

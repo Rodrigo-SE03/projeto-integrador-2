@@ -9,6 +9,8 @@ const char* password = "--($_$)--";
 const int trigPin = 14;
 const int echoPin = 27;
 
+const int ledPin = 33;
+
 const int numReadings = 10;
 //define sound speed in cm/uS
 #define SOUND_SPEED 0.034
@@ -16,10 +18,14 @@ String macString = "";
 
 void setup() {
   Serial.begin(115200); // Starts the serial communication
-  wifi_connect();
+  
   pinMode(trigPin, OUTPUT); // Sets the trigPin as an Output
   pinMode(echoPin, INPUT); // Sets the echoPin as an Input
-  
+
+  pinMode(ledPin, OUTPUT);
+
+  wifi_connect();
+
   uint8_t mac[6];
   WiFi.macAddress(mac);
   for (int i = 0; i < 6; i++) {
@@ -33,9 +39,13 @@ void setup() {
 void wifi_connect(){
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
+    digitalWrite(ledPin, HIGH);
+    delay(250);
     Serial.print(".");
+    digitalWrite(ledPin, LOW);
+    delay(250);
   }
+  digitalWrite(ledPin, LOW);
 
   Serial.println("");
   Serial.println("WiFi connected");
@@ -61,6 +71,7 @@ void loop() {
 float calculate_distance(){
   long durations[numReadings];
   float total = 0.0;
+  digitalWrite(ledPin, HIGH);
 
   for (int i = 0; i < numReadings; i++) {
     durations[i] = get_reading();
@@ -88,6 +99,7 @@ float calculate_distance(){
 
   // Compute the final average distance
   float average_duration = (count > 0) ? (filteredTotal / count) : mean; // Avoid division by zero
+  digitalWrite(ledPin, LOW);
   return average_duration * SOUND_SPEED / 2; // Convert duration to distance
 }
 
@@ -111,11 +123,11 @@ long get_reading(){
 
 void send_message(float distancia){
   HTTPClient http;
-  http.begin("http://192.168.81.88:81/leituras");
+  http.begin("http://192.168.102.88:81/leituras");
   http.addHeader("Content-Type", "application/json");
  
   String payload = "{\"distancia\": " + String(distancia) + 
-                 "\", \"latitude\": 12.345, \"longitude\": 67.890, \"mac\": \"" + 
+                 ", \"latitude\": -16.67109000902933, \"longitude\": -49.23881052883575, \"mac\": \"" + 
                  macString + "\"}";
 
   Serial.println(payload);
