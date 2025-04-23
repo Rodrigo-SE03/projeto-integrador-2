@@ -4,8 +4,9 @@ import random
 
 API_URL = 'http://localhost:81'
 MAX_DIST = 110
+MIN_DIST = 10
 WAIT_TIME = 5
-NUM_SENSORS = 10
+NUM_SENSORS = 2
 
 class sensor:
     def __init__(self, mac, lat, lon):
@@ -16,7 +17,7 @@ class sensor:
     
     def send_leitura(self):
         data = {
-            'distancia': self.dist,
+            'distancia': round(self.dist, 3),
             'latitude': self.lat,
             'longitude': self.lon,
             'mac': self.mac,
@@ -31,7 +32,7 @@ class sensor:
 
     def update_dist(self):
         self.dist += random.uniform(-5, 1)
-        if self.dist <= 10:
+        if self.dist <= MIN_DIST:
             if random.choice([True, False]):
                 self.dist = MAX_DIST
             else:
@@ -44,8 +45,8 @@ lat_goiania = -16.6869
 lon_goiania = -49.2648
 
 # Definir uma variação em torno de Goiânia (em graus)
-lat_range = 0.5
-lon_range = 0.5
+lat_range = 0.02
+lon_range = 0.01
 
 async def main():
     sensores = []
