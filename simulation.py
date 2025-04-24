@@ -17,7 +17,7 @@ PCT_TO_CLEAN = 0.3
 NUM_SENSORS = 2
 WAIT_TIME = 5
 
-VERBOSE = False
+VERBOSE = True
 
 ## Configurações de Localização
 # Coordenadas de Goiânia
