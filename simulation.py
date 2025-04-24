@@ -1,7 +1,6 @@
 import asyncio
 import random
 import httpx
-
 from loguru import logger
 
 API_URL = 'http://localhost:81'
