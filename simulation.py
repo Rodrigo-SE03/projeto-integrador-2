@@ -3,8 +3,10 @@ import random
 import httpx
 from loguru import logger
 
+# URL do servidor
 API_URL = 'http://localhost:81'
 
+# Configurações do sensor
 MAX_DIST = 110
 MIN_DIST_TO_CLEAN = 10
 
@@ -16,6 +18,15 @@ NUM_SENSORS = 2
 WAIT_TIME = 5
 
 VERBOSE = False
+
+## Configurações de Localização
+# Coordenadas de Goiânia
+LAT = -16.6869
+LON = -49.2648
+
+# Variação em torno de Goiânia (em graus)
+LAT_RANGE = 0.02
+LON_RANGE = 0.01
 
 class Sensor:
     def __init__(self, mac, lat, lon, verbose=False):
@@ -63,14 +74,6 @@ class Sensor:
         await self.send_reading()
 
 
-# Coordenadas de Goiânia
-lat_goiania = -16.6869
-lon_goiania = -49.2648
-
-# Definir uma variação em torno de Goiânia (em graus)
-lat_range = 0.02
-lon_range = 0.01
-
 existing_macs = set()
 def gerar_mac_unico():
     while True:
@@ -83,8 +86,8 @@ async def main():
     sensores = []
     logger.info("Iniciando simulação de sensores...")
     for _ in range(NUM_SENSORS):
-        lat = random.uniform(lat_goiania - lat_range, lat_goiania + lat_range)
-        lon = random.uniform(lon_goiania - lon_range, lon_goiania + lon_range)
+        lat = random.uniform(LAT - LAT_RANGE, LAT + LAT_RANGE)
+        lon = random.uniform(LON - LON_RANGE, LON + LON_RANGE)
         mac = gerar_mac_unico()
         sensores.append(Sensor(mac, lat, lon, verbose=VERBOSE))
 
