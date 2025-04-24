@@ -5,11 +5,17 @@ import httpx
 from loguru import logger
 
 API_URL = 'http://localhost:81'
+
 MAX_DIST = 110
-MIN_DIST = 10
-WAIT_TIME = 5
+MIN_DIST_TO_CLEAN = 10
+
+MAX_DIST_GAIN_PER_READING = 5
+MIN_DIST_GAIN_PER_READING = -1
+PCT_TO_CLEAN = 0.3
+
 NUM_SENSORS = 2
-PCT_CLEAN = 0.3
+WAIT_TIME = 5
+
 VERBOSE = False
 
 class Sensor:
@@ -45,9 +51,13 @@ class Sensor:
 
 
     async def update_dist(self):
-        self.dist += random.uniform(-5, 1)
-        if self.dist <= MIN_DIST:
-            if random.random() < PCT_CLEAN:
+        self.dist += random.uniform(-MAX_DIST_GAIN_PER_READING, -MIN_DIST_GAIN_PER_READING)
+
+        if self.dist > MAX_DIST:
+            self.dist = MAX_DIST
+
+        if self.dist <= MIN_DIST_TO_CLEAN:
+            if random.random() < PCT_TO_CLEAN:
                 self.dist = MAX_DIST
             else:
                 self.dist = max(self.dist, 0)
