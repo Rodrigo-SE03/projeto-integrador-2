@@ -15,10 +15,10 @@ MAX_DIST_GAIN_PER_READING = 5
 MIN_DIST_GAIN_PER_READING = -1
 PCT_TO_CLEAN = 0.3
 
-NUM_SENSORS = 2
+NUM_SENSORS = 5
 WAIT_TIME = 5
 
-VERBOSE = True
+VERBOSE = False
 
 ## Configurações de Localização
 # Coordenadas de Goiânia
@@ -26,8 +26,8 @@ LAT = -16.6869
 LON = -49.2648
 
 # Variação em torno de Goiânia (em graus)
-LAT_RANGE = 0.02
-LON_RANGE = 0.01
+LAT_RANGE = 0.06
+LON_RANGE = 0.06
 
 class Sensor:
     def __init__(self, mac, lat, lon, rua, verbose=False):
