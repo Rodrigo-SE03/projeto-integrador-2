@@ -46,7 +46,8 @@ class Sensor:
             'distancia': round(self.dist, 3),
             'latitude': self.lat,
             'longitude': self.lon,
-            'mac': self.mac,
+            'rua': self.rua,
+            'mac': self.mac
         }
 
         async with httpx.AsyncClient() as client:
