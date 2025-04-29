@@ -39,7 +39,7 @@ async def get_leituras():
     dados = list(dados)
     for dado in dados:
         dado["_id"] = str(dado["_id"])
-        dado["rua"] = str(dado["rua"]) + " " + str(dado["rua_id"])
+        dado["rua"] = str(dado["rua"]) + "[" + str(dado["rua_id"]) + "]"
         dado.pop("rua_id")
     return dados
 
