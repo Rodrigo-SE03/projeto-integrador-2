@@ -6,3 +6,4 @@ class Dados(BaseModel):
     latitude:float
     longitude:float
     mac:str
+    rua:str = None

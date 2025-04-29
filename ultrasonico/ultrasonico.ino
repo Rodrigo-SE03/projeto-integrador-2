@@ -3,6 +3,12 @@
 #include <math.h>
 #include <WiFiUdp.h>
 
+#include <TinyGPSPlus.h>
+#include <HardwareSerial.h>
+
+HardwareSerial mySerial(1);
+TinyGPSPlus gps;
+
 const char* ssid = "redeR";
 const char* password = "--($_$)--";
 
@@ -18,7 +24,7 @@ String macString = "";
 
 void setup() {
   Serial.begin(115200); // Starts the serial communication
-  
+  mySerial.begin(9600, SERIAL_8N1, 16, 17);
   pinMode(trigPin, OUTPUT); // Sets the trigPin as an Output
   pinMode(echoPin, INPUT); // Sets the echoPin as an Input
 
@@ -55,17 +61,32 @@ void wifi_connect(){
 
 
 void loop() {
-  float distanceCm = calculate_distance();
+  // float distanceCm = calculate_distance();
  
-  Serial.print("Distance (cm): ");
-  Serial.println(distanceCm);  
-  Serial.println("");
-  if (WiFi.status() == WL_CONNECTED) {
-    send_message(distanceCm);
-  }else {
-    Serial.println("Erro na conexão WiFi");
+  // Serial.print("Distance (cm): ");
+  // Serial.println(distanceCm);  
+  // Serial.println("");
+  // if (WiFi.status() == WL_CONNECTED) {
+  //   send_message(distanceCm);
+  // }else {
+  //   Serial.println("Erro na conexão WiFi");
+  // }
+
+  while (mySerial.available() > 0) {
+    char c = mySerial.read();
+    Serial.print(c);
+    gps.encode(c);
   }
-  delay(5000);
+  Serial.println();
+  if (gps.location.isUpdated()) {
+    Serial.print("GPS: ");
+    Serial.print("Latitude: ");
+    Serial.print(gps.location.lat(), 6);
+    Serial.print(" Longitude: ");
+    Serial.print(gps.location.lng(), 6);
+  }
+  
+  delay(500);
 }
 
 float calculate_distance(){

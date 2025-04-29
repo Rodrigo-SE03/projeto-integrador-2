@@ -3,6 +3,7 @@ import random
 import httpx
 from loguru import logger
 
+from utils import obter_endereco
 # URL do servidor
 API_URL = 'http://localhost:81'
 
@@ -29,11 +30,12 @@ LAT_RANGE = 0.02
 LON_RANGE = 0.01
 
 class Sensor:
-    def __init__(self, mac, lat, lon, verbose=False):
+    def __init__(self, mac, lat, lon, rua, verbose=False):
         self.verbose = verbose
         self.mac = mac
         self.lat = lat
         self.lon = lon
+        self.rua = rua
         self.dist = MAX_DIST
     
     async def send_reading(self):
@@ -86,10 +88,13 @@ async def main():
     sensores = []
     logger.info("Iniciando simulação de sensores...")
     for _ in range(NUM_SENSORS):
-        lat = random.uniform(LAT - LAT_RANGE, LAT + LAT_RANGE)
-        lon = random.uniform(LON - LON_RANGE, LON + LON_RANGE)
         mac = gerar_mac_unico()
-        sensores.append(Sensor(mac, lat, lon, verbose=VERBOSE))
+        while True:
+            lat = random.uniform(LAT - LAT_RANGE, LAT + LAT_RANGE)
+            lon = random.uniform(LON - LON_RANGE, LON + LON_RANGE)
+            rua = obter_endereco(lat, lon)
+            if rua != 'Rua não encontrada': break
+        sensores.append(Sensor(mac, lat, lon, rua, verbose=VERBOSE))
 
     while True:
         await asyncio.gather(*(s.update_dist() for s in sensores))

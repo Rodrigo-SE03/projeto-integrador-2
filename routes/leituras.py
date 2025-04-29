@@ -1,12 +1,14 @@
 from routes.models import Dados
-from database.mongo import collection_leituras
+from database.mongo import collection_leituras, DESCENDING
 
 from typing import List
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Response
+from utils import obter_endereco
 
 import datetime
 import asyncio
 import json
+
 
 router = APIRouter()
 
@@ -37,16 +39,38 @@ async def get_leituras():
     dados = list(dados)
     for dado in dados:
         dado["_id"] = str(dado["_id"])
+        dado["rua"] = str(dado["rua"]) + " " + str(dado["rua_id"])
+        dado.pop("rua_id")
     return dados
 
 
 @router.post("")
 async def root(dados:Dados):
+    if dados.rua is None:
+        dados.rua = obter_endereco(dados.latitude, dados.longitude)
+
+    rua_existente = collection_leituras.find_one({"rua": dados.rua})
+    if rua_existente is None:
+        rua_id = 1
+
+    else:
+        leitura_com_mac = collection_leituras.find_one({"rua": dados.rua, "mac": dados.mac})
+        if leitura_com_mac:
+            rua_id = leitura_com_mac.get('rua_id', 1)
+        else:
+            max_id_document = collection_leituras.find({"rua": dados.rua}).sort("rua_id", DESCENDING).limit(1)
+            max_id = 0
+            for doc in max_id_document:
+                max_id = doc['rua_id']
+            rua_id = max_id + 1 if max_id > 0 else 1
+
     dado = {
         "distancia": dados.distancia,
         "timestamp": datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S"),
         "latitude": dados.latitude,
         "longitude": dados.longitude,
+        "rua": dados.rua,
+        "rua_id": rua_id,
         "mac": dados.mac
     }
     collection_leituras.insert_one(dado)
