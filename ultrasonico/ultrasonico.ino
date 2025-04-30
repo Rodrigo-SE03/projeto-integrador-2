@@ -11,20 +11,28 @@ TinyGPSPlus gps;
 
 const char* ssid = "redeR";
 const char* password = "--($_$)--";
+const char* endpoint_url = "http://192.168.102.88:81/leituras";
 
 const int trigPin = 14;
 const int echoPin = 27;
+const int rx2pin = 16;
+const int tx2pin = 17;
 
 const int ledPin = 33;
 
 const int numReadings = 10;
+
 //define sound speed in cm/uS
 #define SOUND_SPEED 0.034
+#define GPS_BAUD 9600
 String macString = "";
+
+float latitude = 1000;
+float longitude = 1000;
 
 void setup() {
   Serial.begin(115200); // Starts the serial communication
-  mySerial.begin(9600, SERIAL_8N1, 16, 17);
+  mySerial.begin(GPS_BAUD, SERIAL_8N1, rx2pin, tx2pin);
   pinMode(trigPin, OUTPUT); // Sets the trigPin as an Output
   pinMode(echoPin, INPUT); // Sets the echoPin as an Input
 
@@ -61,32 +69,43 @@ void wifi_connect(){
 
 
 void loop() {
-  // float distanceCm = calculate_distance();
- 
-  // Serial.print("Distance (cm): ");
-  // Serial.println(distanceCm);  
-  // Serial.println("");
-  // if (WiFi.status() == WL_CONNECTED) {
-  //   send_message(distanceCm);
-  // }else {
-  //   Serial.println("Erro na conexão WiFi");
-  // }
+  update_loc();
+  float distanceCm = calculate_distance();
+  
+  if(latitude == 1000 || longitude == 1000)
+  {
+    delay(500);
+    return;
+  }
+  Serial.print("Distance (cm): ");
+  Serial.println(distanceCm);  
+  Serial.println("");
+  if (WiFi.status() == WL_CONNECTED) {
+    send_message(distanceCm);
+  }else {
+    Serial.println("Erro na conexão WiFi");
+  }
+  delay(5000);
+}
 
+void update_loc(){
   while (mySerial.available() > 0) {
     char c = mySerial.read();
-    Serial.print(c);
     gps.encode(c);
   }
-  Serial.println();
+
   if (gps.location.isUpdated()) {
     Serial.print("GPS: ");
     Serial.print("Latitude: ");
     Serial.print(gps.location.lat(), 6);
     Serial.print(" Longitude: ");
-    Serial.print(gps.location.lng(), 6);
+    Serial.println(gps.location.lng(), 6);
+    latitude = gps.location.lat();
+    longitude = gps.location.lng();
   }
-  
-  delay(500);
+  else {
+    Serial.println("Dados GPS não atualizados - erro em obter dados");
+  }
 }
 
 float calculate_distance(){
@@ -137,18 +156,17 @@ long get_reading(){
   
   // Reads the echoPin, returns the sound wave travel time in microseconds
   long duration = pulseIn(echoPin, HIGH);
-  Serial.println(duration * SOUND_SPEED / 2);
   return duration;
 }
 
 
 void send_message(float distancia){
   HTTPClient http;
-  http.begin("http://192.168.102.88:81/leituras");
+  http.begin(endpoint_url);
   http.addHeader("Content-Type", "application/json");
  
   String payload = "{\"distancia\": " + String(distancia) + 
-                 ", \"latitude\": -16.67109000902933, \"longitude\": -49.23881052883575, \"mac\": \"" + 
+                 ", \"latitude\": "+String(latitude, 8)+", \"longitude\": "+String(longitude, 8)+", \"mac\": \"" + 
                  macString + "\"}";
 
   Serial.println(payload);
