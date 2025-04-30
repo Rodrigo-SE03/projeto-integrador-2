@@ -8,6 +8,7 @@ MONGO_PASSWORD = 'XpIAmprxBkT59jet'
 uri = f"mongodb+srv://{MONGO_USER}:{MONGO_PASSWORD}@cluster0.b77cm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 local_uri = "mongodb://localhost:27017/"
 try: 
+    raise Exception("Simulando erro de conexão")
     logger.info("Connecting to MongoDB Atlas...")
     client = MongoClient(uri, server_api=ServerApi('1'))
     client.admin.command('ping')

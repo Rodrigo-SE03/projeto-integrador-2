@@ -96,8 +96,9 @@ async def main():
             rua = obter_endereco(lat, lon)
             if rua != 'Rua não encontrada': break
         sensores.append(Sensor(mac, lat, lon, rua, verbose=VERBOSE))
-
+    logger.info("Sensores criados com sucesso!")
     while True:
+        logger.info("Iniciando envio de leituras...")
         await asyncio.gather(*(s.update_dist() for s in sensores))
         await asyncio.sleep(WAIT_TIME)
 

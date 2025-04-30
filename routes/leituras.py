@@ -54,8 +54,8 @@ async def root(dados:Dados):
     if leitura_com_mac:
         rua_id = leitura_com_mac.get('rua_id', 1)
     else:
-        max_id_document = collection_leituras.find({"rua": dados.rua}).sort("rua_id", DESCENDING).limit(1)
-        max_id = max_id_document[0].get('rua_id', 0) if max_id_document.count() > 0 else 0
+        max_id_document = list(collection_leituras.find({"rua": dados.rua}).sort("rua_id", DESCENDING).limit(1))
+        max_id = max_id_document[0].get('rua_id', 0) if max_id_document else 0
         rua_id = max_id + 1
 
     dado = {
