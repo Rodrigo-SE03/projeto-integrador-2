@@ -49,20 +49,14 @@ async def root(dados:Dados):
     if dados.rua is None:
         dados.rua = obter_endereco(dados.latitude, dados.longitude)
 
-    rua_existente = collection_leituras.find_one({"rua": dados.rua})
-    if rua_existente is None:
-        rua_id = 1
-
+    
+    leitura_com_mac = collection_leituras.find_one({"rua": dados.rua, "mac": dados.mac})
+    if leitura_com_mac:
+        rua_id = leitura_com_mac.get('rua_id', 1)
     else:
-        leitura_com_mac = collection_leituras.find_one({"rua": dados.rua, "mac": dados.mac})
-        if leitura_com_mac:
-            rua_id = leitura_com_mac.get('rua_id', 1)
-        else:
-            max_id_document = collection_leituras.find({"rua": dados.rua}).sort("rua_id", DESCENDING).limit(1)
-            max_id = 0
-            for doc in max_id_document:
-                max_id = doc['rua_id']
-            rua_id = max_id + 1 if max_id > 0 else 1
+        max_id_document = collection_leituras.find({"rua": dados.rua}).sort("rua_id", DESCENDING).limit(1)
+        max_id = max_id_document[0].get('rua_id', 0) if max_id_document.count() > 0 else 0
+        rua_id = max_id + 1
 
     dado = {
         "distancia": dados.distancia,
