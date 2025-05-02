@@ -1,19 +1,21 @@
-from routes.models import Dados
+from routes.models import Dados, Tick
 from database.mongo import collection_leituras, DESCENDING
 
 from typing import List
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Response
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Response, BackgroundTasks
 from utils import obter_endereco
+from openweather import get_rain
 
 import datetime
 import asyncio
 import json
 
-
 router = APIRouter()
-
-# Lista para manter os clientes conectados
 clients: List[WebSocket] = []
+
+
+is_simulation = False
+simulation_time = None
 
 async def notify_clients(data):
     for client in clients:
@@ -21,6 +23,7 @@ async def notify_clients(data):
             await client.send_json(data)
         except:
             clients.remove(client)
+
 
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -44,10 +47,20 @@ async def get_leituras():
     return dados
 
 
-@router.post("")
-async def root(dados:Dados):
+async def add_leitura(dados:Dados):
     if dados.rua is None:
-        dados.rua = obter_endereco(dados.latitude, dados.longitude)
+        dados.rua, dados.tipo_zona = obter_endereco(dados.latitude, dados.longitude)
+    
+    if dados.is_simulation:
+        global is_simulation, simulation_time
+        if not is_simulation:
+            is_simulation = True
+            simulation_time = datetime.datetime.now()
+        timestamp = simulation_time
+        rain_level = dados.rain_level
+    else:
+        timestamp = datetime.datetime.now()
+        rain_level = get_rain(dados.latitude, dados.longitude)
 
     
     leitura_com_mac = collection_leituras.find_one({"rua": dados.rua, "mac": dados.mac})
@@ -60,14 +73,45 @@ async def root(dados:Dados):
 
     dado = {
         "distancia": dados.distancia,
-        "timestamp": datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S"),
+        "timestamp": timestamp.strftime("%d-%m-%Y %H:%M:%S"),
         "latitude": dados.latitude,
         "longitude": dados.longitude,
+        "rain_level": rain_level,
         "rua": dados.rua,
+        "tipo_zona": dados.tipo_zona,
         "rua_id": rua_id,
         "mac": dados.mac
     }
     collection_leituras.insert_one(dado)
     dado.pop("_id")
     await notify_clients(json.dumps(dado))
+
+
+@router.post("")
+async def post_leitura(dados:Dados, background_tasks: BackgroundTasks):
+    background_tasks.add_task(add_leitura, dados)
     return Response(status_code=200)
+
+
+@router.post("/end_simulation")
+async def end_simulation():
+    global is_simulation, simulation_time
+    if is_simulation:
+        is_simulation = False
+        simulation_time = None
+        return {"message": "Simulação encerrada com sucesso."}
+    else:
+        return {"message": "Nenhuma simulação em andamento."}
+    
+
+@router.post("/tick_simulation")
+async def tick_simulation(tick:Tick):
+    global is_simulation, simulation_time
+    if is_simulation:
+        simulation_time = simulation_time + datetime.timedelta(days=tick.days, hours=tick.hours, minutes=tick.minutes, seconds=tick.seconds)
+        return {
+            "message": "Simulação avançada com sucesso.",
+            "simulation_time": simulation_time.strftime("%d-%m-%Y %H:%M:%S")
+        }
+    else:
+        return {"message": "Nenhuma simulação em andamento."}

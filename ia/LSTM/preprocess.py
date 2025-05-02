@@ -1,0 +1,59 @@
+import numpy as np
+import pandas as pd
+import torch
+from sklearn.preprocessing import MinMaxScaler, LabelEncoder
+from sklearn.model_selection import train_test_split
+
+def gerar_sequencias_multivariadas(df, features_columns, passo=4, n_steps=3):
+    X, y = [], []
+    for mac in df['mac'].unique():
+        df_mac = df[df['mac'] == mac].sort_values('timestamp')
+        features = df_mac[features_columns].values
+        targets = df_mac['distancia_norm'].values
+
+        if len(features) < passo + n_steps:
+            continue
+
+        for i in range(len(features) - passo - n_steps):
+            X.append(features[i:i+passo])
+            y.append(targets[i+passo:i+passo+n_steps])
+
+    return np.array(X, dtype=np.float32), np.array(y, dtype=np.float32)
+
+
+def preprocess_data(df, passo=4, n_steps=3):
+    
+    scaler = MinMaxScaler()
+    df['distancia_norm'] = scaler.fit_transform(df[['distancia']])
+
+    rain_dummies = pd.get_dummies(df['rain_level'], prefix='rain')
+    df = pd.concat([df, rain_dummies], axis=1)
+
+    le = LabelEncoder()
+    df['tipo_zona_encoded'] = le.fit_transform(df['tipo_zona'])
+
+    features = ['distancia_norm', 'tipo_zona_encoded'] + list(rain_dummies.columns)
+    X, y = gerar_sequencias_multivariadas(df, features, passo=passo, n_steps=n_steps)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=False)
+    return  df, X_train, X_test, y_train, y_test, scaler, le
+
+
+def preprocess_input(df_raw, scaler, le, passo, n_steps):
+    df_raw['distancia_norm'] = scaler.transform(df_raw[['distancia']])
+    rain_dummies = pd.get_dummies(df_raw['rain_level'], prefix='rain')
+    for col in ['rain_0', 'rain_1', 'rain_2', 'rain_3']:
+        if col not in rain_dummies.columns:
+            rain_dummies[col] = 0  # garante mesma estrutura
+    df_raw = pd.concat([df_raw, rain_dummies], axis=1)
+    df_raw['tipo_zona_encoded'] = le.transform(df_raw['tipo_zona'])
+    if df_raw['tipo_zona_encoded'].isnull().any():
+        raise ValueError("Tipo de zona desconhecido detectado.")
+    features = ['distancia_norm', 'tipo_zona_encoded', 'rain_0', 'rain_1', 'rain_2', 'rain_3']
+    df_input = df_raw[features]
+
+    if len(df_input) < n_steps:
+        raise ValueError(f"São necessários pelo menos {n_steps} pontos.")
+
+    X_seq = df_input.iloc[-n_steps:].values.astype(np.float32)
+    X_seq = torch.tensor(X_seq).unsqueeze(0)
+    return X_seq
