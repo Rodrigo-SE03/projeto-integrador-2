@@ -3,8 +3,8 @@ from database.mongo import collection_leituras, DESCENDING
 
 from typing import List
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Response, BackgroundTasks
-from utils import obter_endereco
-from openweather import get_rain
+from utils.localization import obter_endereco
+from utils.openweather import get_rain
 
 import datetime
 import asyncio

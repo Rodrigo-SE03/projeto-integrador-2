@@ -4,7 +4,7 @@ import httpx
 import requests
 from loguru import logger
 
-from utils import obter_endereco
+from utils.localization import obter_endereco
 # URL do servidor
 API_URL = 'http://localhost:81'
 IS_SIMULATION = True
