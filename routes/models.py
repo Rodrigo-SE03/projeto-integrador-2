@@ -17,3 +17,7 @@ class Tick(BaseModel):
     minutes:int = 0
     hours:int = 0
     days:int = 0
+
+
+class RotaLimiar(BaseModel):
+    limiar:float

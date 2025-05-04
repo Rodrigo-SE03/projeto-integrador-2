@@ -124,7 +124,6 @@ def genetic_algorithm(  points:List[Tuple[float, float]], origin:Tuple[float, fl
     no_improve_counter = 0
     elapsed_time = time() - init_population_start
     timers['init_population'] = elapsed_time
-
     for generation in range(generations):   
 
         validation_start = time()

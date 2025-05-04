@@ -207,7 +207,6 @@ def two_opt(route: Sequence[int], points: Sequence[Tuple[float, float]], origin:
         List[int]: 
             Optimized route.
     '''
-
     if not points or not route: return []
 
     if len(route) < 2:
@@ -219,7 +218,6 @@ def two_opt(route: Sequence[int], points: Sequence[Tuple[float, float]], origin:
     best_distance = route_distance(best, points, origin)
     iteration = 0
     improved = True
-
     while improved and (max_iterations < 0 or iteration < max_iterations):
         improved = False
         for i in range(1, len(best) - 2):
