@@ -64,6 +64,22 @@ LON = -49.2648
 LAT_RANGE = 0.06
 LON_RANGE = 0.06
 
+
+pause_event = asyncio.Event()
+pause_event.set()
+
+async def monitor_commands():
+    loop = asyncio.get_event_loop()
+    while True:
+        cmd = await loop.run_in_executor(None, input, "")
+        if cmd == 'pause':
+            pause_event.clear()
+            logger.info("Simulação pausada.")
+        elif cmd == 'resume':
+            pause_event.set()
+            logger.info("Simulação retomada.")
+
+
 class Sensor:
     def __init__(self, mac, lat, lon, rua, tipo_zona, verbose=False):
         self.verbose = verbose
@@ -135,7 +151,6 @@ def simular_chuva():
         return 3  # 3% forte
     
 
-
 existing_macs = set()
 def gerar_mac_unico():
     while True:
@@ -144,6 +159,7 @@ def gerar_mac_unico():
             existing_macs.add(mac)
             return mac
         
+
 async def main():
     sensores = []
     logger.info("Iniciando simulação de sensores...")
@@ -157,6 +173,9 @@ async def main():
         sensores.append(Sensor(mac, lat, lon, rua, tipo_zona, verbose=VERBOSE))
     logger.info("Sensores criados com sucesso!")
 
+    asyncio.create_task(monitor_commands())
+    logger.warning("Digite 'pause' para pausar a simulação e 'resume' para retomar.")
+
     tick_data = {
         'seconds': TICK_SECONDS,
         'minutes': TICK_MINUTES,
@@ -164,16 +183,22 @@ async def main():
         'days': TICK_DAYS
     }
     while True:
+        await pause_event.wait()
         logger.info("Iniciando envio de leituras...")
         
         if IS_SIMULATION:
-            response = requests.post(f'{API_URL}/leituras/tick_simulation', json=tick_data)
-            while response.status_code != 200:
-                logger.error(f"Erro ao enviar tick: {response.status_code} - {response.text}")
+            try:
                 response = requests.post(f'{API_URL}/leituras/tick_simulation', json=tick_data)
+                while response.status_code != 200:
+                    logger.error(f"Erro ao enviar tick: {response.status_code} - {response.text}")
+                    response = requests.post(f'{API_URL}/leituras/tick_simulation', json=tick_data)
+                    
+                else:
+                    logger.info("Tick enviado com sucesso!")
+            except requests.RequestException as e:
+                logger.error(f"Erro ao enviar tick: {e}")
                 await asyncio.sleep(WAIT_TIME)
-            else:
-                logger.info("Tick enviado com sucesso!")
+                continue
 
         chuva = simular_chuva()
         await asyncio.gather(*(s.update_dist(chuva) for s in sensores))
