@@ -45,8 +45,8 @@ MAX_DIST_GAIN_PER_READING = 5
 MIN_DIST_GAIN_PER_READING = -1
 PCT_TO_CLEAN = 0.3
 
-NUM_SENSORS = 5
-WAIT_TIME = 8
+NUM_SENSORS = 10
+WAIT_TIME = 5
 
 TICK_DAYS = 0
 TICK_HOURS = 0
@@ -154,6 +154,7 @@ def simular_chuva():
 existing_macs = set()
 def gerar_mac_unico():
     while True:
+        print('.', end='')
         mac = ''.join(f"{random.randint(0, 255):02x}" for _ in range(6))
         if mac not in existing_macs:
             existing_macs.add(mac)
@@ -163,15 +164,18 @@ def gerar_mac_unico():
 async def main():
     sensores = []
     logger.info("Iniciando simulação de sensores...")
-    for _ in range(NUM_SENSORS):
+    for i in range(NUM_SENSORS):
+        print(f'\n{i}', end=' ')
         mac = gerar_mac_unico()
         while True:
+            print('.', end='')
             lat = random.uniform(LAT - LAT_RANGE, LAT + LAT_RANGE)
             lon = random.uniform(LON - LON_RANGE, LON + LON_RANGE)
             rua, tipo_zona = obter_endereco(lat, lon)
             if rua != 'Rua não encontrada': break
         sensores.append(Sensor(mac, lat, lon, rua, tipo_zona, verbose=VERBOSE))
     logger.info("Sensores criados com sucesso!")
+    
 
     asyncio.create_task(monitor_commands())
     logger.warning("Digite 'pause' para pausar a simulação e 'resume' para retomar.")
