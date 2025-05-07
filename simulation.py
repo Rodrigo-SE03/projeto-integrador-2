@@ -1,14 +1,15 @@
 import asyncio
 import random
 import httpx
-import requests
 from loguru import logger
+import datetime
 
 from utils.localization import obter_endereco
+from database.mongo import collection_leituras, DESCENDING
+
 # URL do servidor
 API_URL = 'http://localhost:81'
 IS_SIMULATION = True
-
 # Configurações do sensor
 MAX_DIST = 110
 MIN_DIST_TO_CLEAN = 10
@@ -90,7 +91,7 @@ class Sensor:
         self.tipo_zona = tipo_zona
         self.dist = MAX_DIST
     
-    async def send_reading(self, chuva):
+    async def send_reading(self, chuva, timestamp):
         if self.verbose:
             logger.info(f"Enviando leitura de {self.mac}: {self.dist}m, ({self.lat}, {self.lon})")
 
@@ -102,7 +103,7 @@ class Sensor:
             'rua': self.rua,
             'tipo_zona': self.tipo_zona,
             'mac': self.mac,
-            'is_simulation': IS_SIMULATION
+            'timestamp': timestamp.strftime("%d-%m-%Y %H:%M:%S")
         }
 
         async with httpx.AsyncClient() as client:
@@ -118,7 +119,7 @@ class Sensor:
                 logger.error(f"Erro inesperado: {e}")
 
 
-    async def update_dist(self, chuva):
+    async def update_dist(self, chuva, timestamp):
 
         chuva_fator = [0.5, 1.0, 1.5, 2.0][chuva]
         max_dist_reading = DIST_PER_READING.get(self.tipo_zona, DIST_PER_READING['default'])[0]
@@ -136,7 +137,7 @@ class Sensor:
                 self.dist = MAX_DIST
             else:
                 self.dist = max(self.dist, 0)
-        await self.send_reading(chuva)
+        await self.send_reading(chuva, timestamp)
     
 
 def simular_chuva():
@@ -162,46 +163,52 @@ def gerar_mac_unico():
 
 async def main():
     sensores = []
-    logger.info("Iniciando simulação de sensores...")
-    for _ in range(NUM_SENSORS):
-        mac = gerar_mac_unico()
-        while True:
-            lat = random.uniform(LAT - LAT_RANGE, LAT + LAT_RANGE)
-            lon = random.uniform(LON - LON_RANGE, LON + LON_RANGE)
-            rua, tipo_zona = obter_endereco(lat, lon)
-            if rua != 'Rua não encontrada': break
-        sensores.append(Sensor(mac, lat, lon, rua, tipo_zona, verbose=VERBOSE))
-    logger.info("Sensores criados com sucesso!")
+    logger.info("Lendo sensores do banco de dados...")
+
+    cursor = collection_leituras.find()
+    timestamp = None
+    for item in cursor:
+        tmp_timestamp = datetime.datetime.strptime(item['timestamp'], "%d-%m-%Y %H:%M:%S")
+        if timestamp is None:
+            timestamp = tmp_timestamp
+        else:
+            timestamp = max(timestamp, tmp_timestamp)
+
+        mac = item['mac']
+        lat = item['latitude']
+        lon = item['longitude']
+        rua = item['rua']
+        tipo_zona = item['tipo_zona']
+        if mac not in existing_macs:
+            existing_macs.add(mac)
+            sensores.append(Sensor(mac, lat, lon, rua, tipo_zona, verbose=VERBOSE))
+    
+
+
+    if len(sensores) == 0:    
+        logger.info("Iniciando simulação de sensores...")
+        for _ in range(NUM_SENSORS):
+            mac = gerar_mac_unico()
+            while True:
+                lat = random.uniform(LAT - LAT_RANGE, LAT + LAT_RANGE)
+                lon = random.uniform(LON - LON_RANGE, LON + LON_RANGE)
+                rua, tipo_zona = obter_endereco(lat, lon)
+                if rua != 'Rua não encontrada': break
+            sensores.append(Sensor(mac, lat, lon, rua, tipo_zona, verbose=VERBOSE))
+        logger.info("Sensores criados com sucesso!")
+        timestamp = datetime.datetime.now()
 
     asyncio.create_task(monitor_commands())
     logger.warning("Digite 'pause' para pausar a simulação e 'resume' para retomar.")
-
-    tick_data = {
-        'seconds': TICK_SECONDS,
-        'minutes': TICK_MINUTES,
-        'hours': TICK_HOURS,
-        'days': TICK_DAYS
-    }
+    
+    
     while True:
         await pause_event.wait()
         logger.info("Iniciando envio de leituras...")
-        
-        if IS_SIMULATION:
-            try:
-                response = requests.post(f'{API_URL}/leituras/tick_simulation', json=tick_data)
-                while response.status_code != 200:
-                    logger.error(f"Erro ao enviar tick: {response.status_code} - {response.text}")
-                    response = requests.post(f'{API_URL}/leituras/tick_simulation', json=tick_data)
-                    
-                else:
-                    logger.info("Tick enviado com sucesso!")
-            except requests.RequestException as e:
-                logger.error(f"Erro ao enviar tick: {e}")
-                await asyncio.sleep(WAIT_TIME)
-                continue
-
         chuva = simular_chuva()
-        await asyncio.gather(*(s.update_dist(chuva) for s in sensores))
+        if not IS_SIMULATION: timestamp = datetime.datetime.now()
+        await asyncio.gather(*(s.update_dist(chuva, timestamp) for s in sensores))
+        timestamp += datetime.timedelta(days=TICK_DAYS, hours=TICK_HOURS, minutes=TICK_MINUTES, seconds=TICK_SECONDS)
         await asyncio.sleep(WAIT_TIME)
 
 

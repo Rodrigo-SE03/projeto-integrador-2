@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from datetime import datetime
 
 
 class Dados(BaseModel):
@@ -8,8 +9,8 @@ class Dados(BaseModel):
     mac:str
     rua:str = None
     tipo_zona:str = None
-    is_simulation:bool = False
     rain_level:int = 0
+    timestamp:str = None
 
 
 class Tick(BaseModel):
