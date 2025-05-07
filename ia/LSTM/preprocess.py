@@ -7,10 +7,10 @@ from sklearn.model_selection import train_test_split
 def gerar_sequencias_multivariadas(df, features_columns, passo=4, n_steps=3):
     X, y = [], []
     for mac in df['mac'].unique():
+        
         df_mac = df[df['mac'] == mac].sort_values('timestamp')
         features = df_mac[features_columns].values
         targets = df_mac['distancia_norm'].values
-
         if len(features) < passo + n_steps:
             continue
 

@@ -46,8 +46,8 @@ MAX_DIST_GAIN_PER_READING = 5
 MIN_DIST_GAIN_PER_READING = -1
 PCT_TO_CLEAN = 0.3
 
-NUM_SENSORS = 5
-WAIT_TIME = 8
+NUM_SENSORS = 10
+WAIT_TIME = 5
 
 TICK_DAYS = 0
 TICK_HOURS = 0
@@ -155,6 +155,7 @@ def simular_chuva():
 existing_macs = set()
 def gerar_mac_unico():
     while True:
+        print('.', end='')
         mac = ''.join(f"{random.randint(0, 255):02x}" for _ in range(6))
         if mac not in existing_macs:
             existing_macs.add(mac)
