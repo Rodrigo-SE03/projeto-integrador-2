@@ -1,6 +1,5 @@
 from database.mongo import aggregate, collection_leituras
-from ia.GA.genetic_algorithm_model import genetic_algorithm
-from ia.GA.routing_utils import two_opt, route_distance
+from ia.GA.model import genetic_algorithm
 from routes.models import RotaLimiar
 from fastapi import APIRouter, BackgroundTasks, Response
 from loguru import logger
@@ -8,11 +7,12 @@ from loguru import logger
 router = APIRouter()
 
 rota = None
+distancia = None
 flag_training = False
 origin = (-16.6869, -49.2648)
 
 def calculate(limiar:float):
-    global rota, flag_training
+    global rota, distancia, flag_training
     if flag_training:  return
     flag_training = True
     try:
@@ -50,9 +50,9 @@ def calculate(limiar:float):
         resultados = aggregate(collection_leituras, pipeline)
         resultados_dict = {(p['latitude'], p['longitude']): p for p in resultados}
         points = list(resultados_dict.keys())
-        rota_tmp = genetic_algorithm(points, origin, use_nn_start=True)
-        rota_tmp = two_opt(rota_tmp, points, origin)
-        rota =[resultados_dict[(points[i][0], points[i][1])] for i in rota_tmp]
+
+        rota_points, distancia = genetic_algorithm(points, origin, use_nn_start=True)
+        rota =[resultados_dict[(points[i][0], points[i][1])] for i in rota_points]
         logger.info(f"Rota calculada")
         
     except Exception as e:
@@ -75,18 +75,15 @@ def calculate_route(rota_limiar:RotaLimiar, background_tasks: BackgroundTasks):
     return Response(status_code=200, content="Route calculation started.")
 
 
-
 @router.get("")
 def get_rota():
     global rota, flag_training
     if flag_training:
         return Response(status_code=503, content="Model is already calculating an route, please try again later.")
+    
     elif rota is None:
         return Response(status_code=503, content="Route not calculated yet.")
-    
-    
-    points = [(p['latitude'], p['longitude']) for p in rota]
-    distancia = route_distance(range(len(points)), points, origin)
+
     return {"distancia": distancia, "rota": rota}
 
 
