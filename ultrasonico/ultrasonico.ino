@@ -91,9 +91,10 @@ void loop() {
 void update_loc(){
   while (mySerial.available() > 0) {
     char c = mySerial.read();
+    Serial.print(c);
     gps.encode(c);
   }
-
+  Serial.println("");
   if (gps.location.isUpdated()) {
     Serial.print("GPS: ");
     Serial.print("Latitude: ");

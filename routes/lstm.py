@@ -17,7 +17,7 @@ def create_lstm_model():
     flag_training = False
 
 
-@router.post("/update_model")
+@router.get("/update_model")
 def update_model(background_tasks: BackgroundTasks):
     background_tasks.add_task(create_lstm_model)
     return Response(status_code=200)

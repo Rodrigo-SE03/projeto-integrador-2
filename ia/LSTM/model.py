@@ -15,11 +15,11 @@ import os
 
 N_EPOCHS = 500
 BATCH_SIZE = 32
-HIDDEN_SIZE = 64
+HIDDEN_SIZE = 128
 
 #Leitura a cada 15 minutos
 PASSO = 4*24  # 4 leituras por hora, 24 horas
-N_STEPS = 4*24*3 # 3 dias de previsão
+N_STEPS = 4*1
 
 def train_model(model, train_loader, loss_fn, optimizer, n_epochs):
     for epoch in range(N_EPOCHS):
@@ -52,7 +52,7 @@ def test_model(model, test_loader, scaler):
     
     y_test_original = scaler.inverse_transform(truths.squeeze(-1))
     y_pred_original = scaler.inverse_transform(preds)
-    logger.info("Test RMSE:", root_mean_squared_error(y_test_original, y_pred_original))
+    logger.info(f"Test RMSE: {root_mean_squared_error(y_test_original, y_pred_original)}")
 
 
 def save_model(model, scaler, le):
