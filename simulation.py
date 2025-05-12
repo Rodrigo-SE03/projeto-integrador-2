@@ -1,6 +1,7 @@
 import asyncio
 import random
 import httpx
+import osmnx as ox
 from loguru import logger
 import datetime
 
@@ -64,7 +65,7 @@ LON = -49.2648
 # Variação em torno de Goiânia (em graus)
 LAT_RANGE = 0.06
 LON_RANGE = 0.06
-
+place = "Goiânia, Goiás, Brasil"
 
 pause_event = asyncio.Event()
 pause_event.set()
@@ -166,35 +167,50 @@ async def main():
     sensores = []
     logger.info("Lendo sensores do banco de dados...")
 
-    cursor = collection_leituras.find()
-    timestamp = None
-    for item in cursor:
-        tmp_timestamp = datetime.datetime.strptime(item['timestamp'], "%d-%m-%Y %H:%M:%S")
-        if timestamp is None:
-            timestamp = tmp_timestamp
-        else:
-            timestamp = max(timestamp, tmp_timestamp)
+    # cursor = collection_leituras.find()
+    # timestamp = None
+    # for item in cursor:
+    #     tmp_timestamp = datetime.datetime.strptime(item['timestamp'], "%d-%m-%Y %H:%M:%S")
+    #     if timestamp is None:
+    #         timestamp = tmp_timestamp
+    #     else:
+    #         timestamp = max(timestamp, tmp_timestamp)
 
-        mac = item['mac']
-        lat = item['latitude']
-        lon = item['longitude']
-        rua = item['rua']
-        tipo_zona = item['tipo_zona']
-        if mac not in existing_macs:
-            existing_macs.add(mac)
-            sensores.append(Sensor(mac, lat, lon, rua, tipo_zona, verbose=VERBOSE))
+    #     mac = item['mac']
+    #     lat = item['latitude']
+    #     lon = item['longitude']
+    #     rua = item['rua']
+    #     tipo_zona = item['tipo_zona']
+    #     if mac not in existing_macs:
+    #         existing_macs.add(mac)
+    #         sensores.append(Sensor(mac, lat, lon, rua, tipo_zona, verbose=VERBOSE))
     
 
 
-    if len(sensores) == 0:    
+    if len(sensores) == 0:
         logger.info("Iniciando simulação de sensores...")
-        for _ in range(NUM_SENSORS):
+        place = "Goiânia, Goiás, Brasil"
+        G = ox.graph_from_place(place, network_type='drive')
+        G_proj = ox.project_graph(G)
+        G_proj = G_proj.to_undirected()
+
+        points_proj = ox.utils_geo.sample_points(G_proj, NUM_SENSORS)
+        points_geo = points_proj.to_crs(epsg=4326)
+        points = [[point.x, point.y] for point in points_geo.geometry]
+    
+        for idx in range(NUM_SENSORS):
             mac = gerar_mac_unico()
             while True:
-                lat = random.uniform(LAT - LAT_RANGE, LAT + LAT_RANGE)
-                lon = random.uniform(LON - LON_RANGE, LON + LON_RANGE)
+                lat = points[idx][1]
+                lon = points[idx][0]
                 rua, tipo_zona = obter_endereco(lat, lon)
+                if rua.startswith('.'): rua = rua[1:]
                 if rua != 'Rua não encontrada': break
+                points_proj = ox.utils_geo.sample_points(G_proj, 1)
+                points_geo = points_proj.to_crs(epsg=4326)
+                p = [[point.x, point.y] for point in points_geo.geometry]
+                points[idx] = p[0]
+
             sensores.append(Sensor(mac, lat, lon, rua, tipo_zona, verbose=VERBOSE))
         logger.info("Sensores criados com sucesso!")
         timestamp = datetime.datetime.now()

@@ -1,7 +1,11 @@
 from numba import njit
 import numpy as np
+import requests
+import os
+from loguru import logger
 
 
+OPENROUTE_APIKEY = os.getenv("OPENROUTE_APIKEY")
 EARTH_RADIUS_KM = 6371
 def haversine(points: np.ndarray) -> np.ndarray: 
     points_rad = np.radians(points)
@@ -28,9 +32,29 @@ def route_distance(route, dist_matrix) -> float:
     return total
 
 
+def get_distance_matrix(points: np.ndarray) -> np.ndarray:
+    url = f"https://api.openrouteservice.org/v2/matrix/driving-car"
+    body = {
+        "locations": points.tolist(),
+        "metrics":["distance"], "units":"km"}
+    headers = {
+        'Accept': 'application/json, application/geo+json, application/gpx+xml, img/png; charset=utf-8',
+        'Authorization': OPENROUTE_APIKEY,
+        'Content-Type': 'application/json; charset=utf-8'
+    }
+    call = requests.post(url, json=body, headers=headers)
+    if call.status_code != 200:
+        logger.error(f"Error: {call.status_code} - {call.text}")
+        return haversine(points)
+    
+    data = call.json()
+    distances = np.array(data['distances'])
+    return distances
+
+
 def nearest_neighbor(origin, points: np.ndarray) -> tuple[list[int], np.ndarray]:
 
-    dist_matrix = haversine(np.vstack([origin, points]))
+    dist_matrix = get_distance_matrix(np.vstack([origin, points]))
     np.fill_diagonal(dist_matrix, np.inf)
     
     unvisited = set(range(1, len(points)+1))

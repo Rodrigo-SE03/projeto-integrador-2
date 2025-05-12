@@ -95,6 +95,7 @@ def genetic_algorithm(points: np.ndarray, origin: tuple, population_size: int = 
         best_distance = route_distance(best_route, dist_matrix)
     return best_route, best_distance
 
+
 @njit
 def _ga_core(population: np.ndarray, dist_matrix: np.ndarray, generations: int, mutation_rate: float, window_size: int, improvement_thresh: float) -> tuple[np.ndarray, float]:
 
