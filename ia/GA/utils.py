@@ -33,6 +33,7 @@ def route_distance(route, dist_matrix) -> float:
 
 
 def get_distance_matrix(points: np.ndarray) -> np.ndarray:
+    if len(points) > 59: return haversine(points) # Limit of OpenRouteService API
     url = f"https://api.openrouteservice.org/v2/matrix/driving-car"
     body = {
         "locations": points.tolist(),
