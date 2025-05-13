@@ -6,7 +6,7 @@ from loguru import logger
 import datetime
 
 from utils.localization import obter_endereco
-from database.mongo import collection_leituras, DESCENDING
+from database.mongo import get_collection, DESCENDING
 
 # URL do servidor
 API_URL = 'http://localhost:81'
@@ -167,7 +167,7 @@ async def main():
     sensores = []
     logger.info("Lendo sensores do banco de dados...")
 
-    cursor = collection_leituras.find()
+    cursor = get_collection().find()
     timestamp = None
     for item in cursor:
         tmp_timestamp = datetime.datetime.strptime(item['timestamp'], "%d-%m-%Y %H:%M:%S")

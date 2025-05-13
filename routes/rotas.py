@@ -1,4 +1,4 @@
-from database.mongo import aggregate, collection_leituras
+from database.mongo import aggregate, get_collection
 from ia.GA.model import genetic_algorithm
 from routes.models import RotaLimiar
 from fastapi import APIRouter, BackgroundTasks, Response
@@ -48,7 +48,7 @@ def calculate():
                 }
             }
         ]
-        resultados = aggregate(collection_leituras, pipeline)
+        resultados = aggregate(get_collection(), pipeline)
         resultados_dict = {(p['latitude'], p['longitude']): p for p in resultados}
         points = list(resultados_dict.keys())
 

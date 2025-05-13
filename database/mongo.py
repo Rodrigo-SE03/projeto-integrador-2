@@ -13,6 +13,7 @@ collection_leituras = None
 def init_db():
     global db, collection_leituras
     try: 
+        raise Exception("Simulating MongoDB connection error")
         logger.info("Connecting to MongoDB Atlas...")
         client = MongoClient(uri, server_api=ServerApi('1'))
         client.admin.command('ping')
@@ -25,6 +26,9 @@ def init_db():
     db = client['projeto_integrador']
     collection_leituras = db['leituras']
 
+def get_collection():
+    if collection_leituras is None: init_db()
+    return collection_leituras
 
 def aggregate(collection, pipeline):
     if not db: raise Exception("Database not initialized. Call init_db() first.")

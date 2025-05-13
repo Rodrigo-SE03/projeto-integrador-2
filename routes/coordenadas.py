@@ -1,4 +1,4 @@
-from database.mongo import collection_leituras, aggregate
+from database.mongo import get_collection, aggregate
 from fastapi import APIRouter
 
 router = APIRouter()
@@ -15,5 +15,5 @@ async def get_coordenadas():
         }
     ]
 
-    dados = aggregate(collection_leituras, pipeline)
+    dados = aggregate(get_collection(), pipeline)
     return dados

@@ -1,5 +1,5 @@
 from routes.models import Dados
-from database.mongo import collection_leituras, DESCENDING
+from database.mongo import get_collection, DESCENDING
 
 from typing import List
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Response, BackgroundTasks
@@ -35,7 +35,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
 @router.get("")
 async def get_leituras():
-    dados = collection_leituras.find()
+    dados = get_collection().find()
     dados = list(dados)
     for dado in dados:
         dado["_id"] = str(dado["_id"])
@@ -52,11 +52,11 @@ async def add_leitura(dados:Dados):
     timestamp = datetime.datetime.strptime(dados.timestamp, "%d-%m-%Y %H:%M:%S") if dados.timestamp != None else datetime.datetime.now() 
     rain_level = dados.rain_level if dados.rain_level != None else get_rain(dados.latitude, dados.longitude)
 
-    leitura_com_mac = collection_leituras.find_one({"rua": dados.rua, "mac": dados.mac})
+    leitura_com_mac = get_collection().find_one({"rua": dados.rua, "mac": dados.mac})
     if leitura_com_mac:
         rua_id = leitura_com_mac.get('rua_id', 1)
     else:
-        max_id_document = list(collection_leituras.find({"rua": dados.rua}).sort("rua_id", DESCENDING).limit(1))
+        max_id_document = list(get_collection().find({"rua": dados.rua}).sort("rua_id", DESCENDING).limit(1))
         max_id = max_id_document[0].get('rua_id', 0) if max_id_document else 0
         rua_id = max_id + 1
 
@@ -71,7 +71,7 @@ async def add_leitura(dados:Dados):
         "rua_id": rua_id,
         "mac": dados.mac
     }
-    collection_leituras.insert_one(dado)
+    get_collection().insert_one(dado)
     dado.pop("_id")
     await notify_clients(json.dumps(dado))
 

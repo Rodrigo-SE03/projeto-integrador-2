@@ -6,7 +6,7 @@ import numpy as np
 from sklearn.metrics import root_mean_squared_error
 import joblib
 
-from database.mongo import collection_leituras
+from database.mongo import get_collection
 from .preprocess import preprocess_data, preprocess_input
 from .dataloader import create_dataloaders
 from .LSTM import LSTM
@@ -73,7 +73,7 @@ def load_model():
 
 
 def create_model(hidden_size=HIDDEN_SIZE, passo=PASSO, n_steps=N_STEPS, n_epochs=N_EPOCHS, batch_size=BATCH_SIZE):
-    dados = list(collection_leituras.find())
+    dados = list(get_collection().find())
     df = pd.DataFrame(dados)
     df.drop(columns=['_id'], inplace=True)
 
@@ -92,7 +92,7 @@ def create_model(hidden_size=HIDDEN_SIZE, passo=PASSO, n_steps=N_STEPS, n_epochs
 
 
 def predict(model, scaler, le, mac):
-    cursor = collection_leituras.find({"mac": mac}).sort("timestamp", -1).limit(model.n_steps)
+    cursor = get_collection().find({"mac": mac}).sort("timestamp", -1).limit(model.n_steps)
     dados = list(cursor)
     if len(dados) < model.n_steps:
         raise ValueError("Não há dados suficientes para esse MAC.")
