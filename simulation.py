@@ -167,23 +167,23 @@ async def main():
     sensores = []
     logger.info("Lendo sensores do banco de dados...")
 
-    # cursor = collection_leituras.find()
-    # timestamp = None
-    # for item in cursor:
-    #     tmp_timestamp = datetime.datetime.strptime(item['timestamp'], "%d-%m-%Y %H:%M:%S")
-    #     if timestamp is None:
-    #         timestamp = tmp_timestamp
-    #     else:
-    #         timestamp = max(timestamp, tmp_timestamp)
+    cursor = collection_leituras.find()
+    timestamp = None
+    for item in cursor:
+        tmp_timestamp = datetime.datetime.strptime(item['timestamp'], "%d-%m-%Y %H:%M:%S")
+        if timestamp is None:
+            timestamp = tmp_timestamp
+        else:
+            timestamp = max(timestamp, tmp_timestamp)
 
-    #     mac = item['mac']
-    #     lat = item['latitude']
-    #     lon = item['longitude']
-    #     rua = item['rua']
-    #     tipo_zona = item['tipo_zona']
-    #     if mac not in existing_macs:
-    #         existing_macs.add(mac)
-    #         sensores.append(Sensor(mac, lat, lon, rua, tipo_zona, verbose=VERBOSE))
+        mac = item['mac']
+        lat = item['latitude']
+        lon = item['longitude']
+        rua = item['rua']
+        tipo_zona = item['tipo_zona']
+        if mac not in existing_macs:
+            existing_macs.add(mac)
+            sensores.append(Sensor(mac, lat, lon, rua, tipo_zona, verbose=VERBOSE))
     
 
 
