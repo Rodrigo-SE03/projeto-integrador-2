@@ -32,8 +32,8 @@ def route_distance(route, dist_matrix) -> float:
     return total
 
 
-def get_distance_matrix(points: np.ndarray) -> np.ndarray:
-    if len(points) > 59: return haversine(points) # Limit of OpenRouteService API
+def get_distance_matrix(points: np.ndarray, initial=False) -> np.ndarray:
+    if initial or len(points) > 59: return haversine(points)
     url = f"https://api.openrouteservice.org/v2/matrix/driving-car"
     body = {
         "locations": points.tolist(),
@@ -55,9 +55,9 @@ def get_distance_matrix(points: np.ndarray) -> np.ndarray:
     return distances
 
 
-def nearest_neighbor(origin, points: np.ndarray) -> tuple[list[int], np.ndarray]:
+def nearest_neighbor(origin, points: np.ndarray, initial=False) -> tuple[list[int], np.ndarray]:
 
-    dist_matrix = get_distance_matrix(np.vstack([origin, points]))
+    dist_matrix = get_distance_matrix(np.vstack([origin, points]), initial=initial)
     np.fill_diagonal(dist_matrix, np.inf)
     
     unvisited = set(range(1, len(points)+1))

@@ -84,9 +84,9 @@ def mutate(route:np.ndarray) -> np.ndarray:
 
 
 def genetic_algorithm(points: list, origin: tuple, population_size: int = 100, generations: int = 1000, mutation_rate: float = 0.2, 
-                      early_stop = True, seeding=True, post_process=True) -> tuple[list[int], float]:
+                      early_stop = True, seeding=True, post_process=True, initial=False) -> tuple[list[int], float]:
 
-    nn_route, dist_matrix = nearest_neighbor(origin, np.array(points))
+    nn_route, dist_matrix = nearest_neighbor(origin, np.array(points), initial=initial)
     population = init_population(population_size, nn_route, use_seed=seeding)
     improvement_threshold = 0.001 if early_stop else -1
     best_route, best_distance = _ga_core(population, dist_matrix, generations, mutation_rate, 250, improvement_threshold)

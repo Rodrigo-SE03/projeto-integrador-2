@@ -10,7 +10,7 @@ import asyncio
 async def background_start():
     population = [(float(i), float(i)) for i in range(3)]
     origin = (3.0, 3.0)
-    genetic_algorithm(population, origin)
+    genetic_algorithm(population, origin, initial=True)
 
     try:
         lstm.lstm_model, lstm.lstm_scaler, lstm.lstm_le = load_model()
@@ -19,9 +19,10 @@ async def background_start():
 
 
 async def startup_event(_):
-    asyncio.create_task(background_start())
     init_db()
+    asyncio.create_task(background_start())
     yield
+
 
 app = FastAPI(lifespan=startup_event)
 
