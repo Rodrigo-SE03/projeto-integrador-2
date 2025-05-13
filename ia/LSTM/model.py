@@ -75,8 +75,10 @@ def load_model():
 def create_model(hidden_size=HIDDEN_SIZE, passo=PASSO, n_steps=N_STEPS, n_epochs=N_EPOCHS, batch_size=BATCH_SIZE):
     dados = list(get_collection().find())
     df = pd.DataFrame(dados)
+    if df.empty:
+        raise ValueError("Não há dados suficientes para treinar o modelo.")
+    
     df.drop(columns=['_id'], inplace=True)
-
     df, X_train, X_test, y_train, y_test, scaler, le = preprocess_data(df, passo=passo, n_steps=n_steps)
     train_loader, test_loader = create_dataloaders(X_train, y_train, X_test, y_test, batch_size)
 

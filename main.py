@@ -12,13 +12,10 @@ async def background_start():
         lstm.lstm_model, lstm.lstm_scaler, lstm.lstm_le = load_model()
     except Exception as e:
         lstm.create_lstm_model()
-        
+
     population = [(float(i), float(i)) for i in range(3)]
     origin = (3.0, 3.0)
     genetic_algorithm(population, origin, initial=True)
-
-    
-
 
 async def startup_event(_):
     init_db()
