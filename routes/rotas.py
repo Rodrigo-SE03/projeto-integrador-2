@@ -8,12 +8,13 @@ router = APIRouter()
 
 rota = None
 distancia = None
-flag_training = False
 origin = (-16.6869, -49.2648)
+limiar = 2000.0
 
-def calculate(limiar:float):
+
+@router.get("")
+def calculate():
     global rota, distancia, flag_training
-    if flag_training:  return
     flag_training = True
     try:
         pipeline = [
@@ -54,37 +55,11 @@ def calculate(limiar:float):
         rota_points, distancia = genetic_algorithm(points, origin, use_nn_start=True)
         rota =[resultados_dict[(points[i][0], points[i][1])] for i in rota_points]
         logger.info(f"Rota calculada")
+        return rota, distancia
         
     except Exception as e:
         logger.exception(f"Error in calculate: {e}")
-    flag_training = False
-
-
-@router.post("")
-def calculate_route(rota_limiar:RotaLimiar, background_tasks: BackgroundTasks):
-    limiar = rota_limiar.limiar
-    limiar = 2000.0
-    if limiar < 0:
-        return Response(status_code=400, content="Limiar must be greater than 0.")
-
-    global flag_training
-    if flag_training:
-        return Response(status_code=503, content="Model is already calculating an route, please try again later.")
-    
-    background_tasks.add_task(calculate, limiar)
-    return Response(status_code=200, content="Route calculation started.")
-
-
-@router.get("")
-def get_rota():
-    global rota, flag_training
-    if flag_training:
-        return Response(status_code=503, content="Model is already calculating an route, please try again later.")
-    
-    elif rota is None:
-        return Response(status_code=503, content="Route not calculated yet.")
-
-    return {"distancia": distancia, "rota": rota}
+        return Response(status_code=500, content="Error calculating route.")
 
 
 @router.post("/origin")
@@ -98,3 +73,10 @@ def update_origin(new_origin: tuple[float, float]):
     
     origin = new_origin
     return Response(status_code=200, content="Origin updated successfully.")
+
+
+@router.post("/limiar")
+def calculate_route(new_limiar: float):
+    global limiar
+    limiar = new_limiar
+    limiar = 2000.0

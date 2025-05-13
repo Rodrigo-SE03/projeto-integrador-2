@@ -12,9 +12,13 @@ lstm_le = None
 def create_lstm_model():
     global lstm_model, lstm_scaler, lstm_le, flag_training
     if flag_training: return
-    flag_training = True
-    lstm_model, lstm_scaler, lstm_le = create_model()
-    flag_training = False
+    try:
+        flag_training = True
+        lstm_model, lstm_scaler, lstm_le = create_model()
+        flag_training = False
+    except Exception as e:
+        flag_training = False
+        logger.exception(f"Error creating model: {e}")
 
 
 @router.get("/update_model")

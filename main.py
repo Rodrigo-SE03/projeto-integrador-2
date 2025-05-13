@@ -1,8 +1,29 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes import leituras, coordenadas, lstm, rotas
+from database.mongo import init_db
 
-app = FastAPI()
+from ia.GA.model import genetic_algorithm
+from ia.LSTM.model import load_model
+import asyncio
+
+async def background_start():
+    population = [(float(i), float(i)) for i in range(3)]
+    origin = (3.0, 3.0)
+    genetic_algorithm(population, origin)
+
+    try:
+        lstm.lstm_model, lstm.lstm_scaler, lstm.lstm_le = load_model()
+    except Exception as e:
+        lstm.create_lstm_model()
+
+
+async def startup_event(_):
+    asyncio.create_task(background_start())
+    init_db()
+    yield
+
+app = FastAPI(lifespan=startup_event)
 
 app.add_middleware(
     CORSMiddleware,

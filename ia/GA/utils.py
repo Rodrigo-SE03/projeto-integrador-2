@@ -50,6 +50,8 @@ def get_distance_matrix(points: np.ndarray) -> np.ndarray:
     
     data = call.json()
     distances = np.array(data['distances'])
+    for d in distances:
+        if None in d: return haversine(points)
     return distances
 
 
