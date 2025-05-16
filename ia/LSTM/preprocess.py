@@ -29,7 +29,7 @@ def preprocess_data(df, passo=4, n_steps=3):
     le = LabelEncoder()
     df['tipo_zona_encoded'] = le.fit_transform(df['tipo_zona'])
 
-    features = ['distancia_norm', 'tipo_zona_encoded' + 'rain_level']
+    features = ['distancia_norm', 'tipo_zona_encoded', 'rain_level']
     X, y = gerar_sequencias_multivariadas(df, features, passo=passo, n_steps=n_steps)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=False)
     return  df, X_train, X_test, y_train, y_test, scaler, le
@@ -43,7 +43,7 @@ def preprocess_input(df_raw, scaler, le, passo, n_steps):
     if df_raw['tipo_zona_encoded'].isnull().any():
         raise ValueError("Tipo de zona desconhecido detectado.")
     
-    features = ['distancia_norm', 'tipo_zona_encoded', 'rain_0', 'rain_1', 'rain_2', 'rain_3']
+    features = ['distancia_norm', 'tipo_zona_encoded', 'rain_level']
     df_input = df_raw[features]
 
     if len(df_input) < n_steps:
