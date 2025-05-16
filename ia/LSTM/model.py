@@ -13,6 +13,8 @@ from .LSTM import LSTM
 from loguru import logger
 import os
 
+import matplotlib.pyplot as plt
+
 N_EPOCHS = 500
 BATCH_SIZE = 32
 HIDDEN_SIZE = 128
@@ -22,7 +24,8 @@ PASSO = 4*24  # 4 leituras por hora, 24 horas
 N_STEPS = 4*1
 
 def train_model(model, train_loader, loss_fn, optimizer, n_epochs):
-    for epoch in range(N_EPOCHS):
+    loss = []
+    for epoch in range(n_epochs):
         model.train()
         epoch_loss = 0
         for X_batch, y_batch in train_loader:
@@ -33,7 +36,16 @@ def train_model(model, train_loader, loss_fn, optimizer, n_epochs):
             loss.backward()
             optimizer.step()
             epoch_loss += loss.item()
-        logger.info(f"Epoch {epoch+1}/{N_EPOCHS} - Loss: {epoch_loss/len(train_loader):.4f}")
+            loss.append(loss.item())
+        logger.info(f"Epoch {epoch+1}/{n_epochs} - Loss: {epoch_loss/len(train_loader):.4f}")
+    
+    plt.plot(loss)
+    plt.title("Loss over epochs")
+    plt.xlabel("Epochs")
+    plt.ylabel("Loss")
+    plt.savefig("ia_models/loss.png")
+    plt.close()
+
 
 
 def test_model(model, test_loader, scaler):
@@ -53,6 +65,17 @@ def test_model(model, test_loader, scaler):
     y_test_original = scaler.inverse_transform(truths.squeeze(-1))
     y_pred_original = scaler.inverse_transform(preds)
     logger.info(f"Test RMSE: {root_mean_squared_error(y_test_original, y_pred_original)}")
+
+    accuracy = np.mean(np.abs((y_test_original - y_pred_original) / y_test_original)) * 100
+    logger.info(f"Test Accuracy: {accuracy:.2f}%")
+    plt.plot(y_test_original, label='True')
+    plt.plot(y_pred_original, label='Predicted')
+    plt.title("True vs Predicted")
+    plt.xlabel("Samples")
+    plt.ylabel("Values")
+    plt.legend()
+    plt.savefig("ia_models/true_vs_predicted.png")
+    plt.close()
 
 
 def save_model(model, scaler, le):
