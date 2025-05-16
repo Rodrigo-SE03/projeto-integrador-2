@@ -43,6 +43,9 @@ def train_model(model, train_loader, loss_fn, optimizer, n_epochs):
     plt.title("Loss over epochs")
     plt.xlabel("Epochs")
     plt.ylabel("Loss")
+
+    if not os.path.exists("ia_models"):
+        os.makedirs("ia_models")
     plt.savefig("ia_models/loss.png")
     plt.close()
 
@@ -74,6 +77,10 @@ def test_model(model, test_loader, scaler):
     plt.xlabel("Samples")
     plt.ylabel("Values")
     plt.legend()
+
+    if not os.path.exists("ia_models"):
+        os.makedirs("ia_models")
+
     plt.savefig("ia_models/true_vs_predicted.png")
     plt.close()
 
