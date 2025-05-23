@@ -9,7 +9,7 @@ router = APIRouter()
 rota = None
 distancia = None
 origin = (-16.6869, -49.2648)
-limiar = 2000.0
+limiar = 44.0
 
 
 @router.get("")
@@ -52,7 +52,7 @@ def calculate():
         resultados_dict = {(p['latitude'], p['longitude']): p for p in resultados}
         points = list(resultados_dict.keys())
 
-        rota_points, distancia = genetic_algorithm(points, origin, use_nn_start=True)
+        rota_points, distancia = genetic_algorithm(points, origin)
         rota =[resultados_dict[(points[i][0], points[i][1])] for i in rota_points]
         logger.info(f"Rota calculada")
         return rota, distancia

@@ -15,16 +15,16 @@ import os
 
 import matplotlib.pyplot as plt
 
-N_EPOCHS = 500
+N_EPOCHS = 50
 BATCH_SIZE = 32
 HIDDEN_SIZE = 128
 
 #Leitura a cada 15 minutos
-PASSO = 4*24  # 4 leituras por hora, 24 horas
-N_STEPS = 4*1
+PASSO = 4*24*5  # 4 leituras por hora, 24 horas
+N_STEPS = 4*1*24
 
 def train_model(model, train_loader, loss_fn, optimizer, n_epochs):
-    loss = []
+    loss_list = []
     for epoch in range(n_epochs):
         model.train()
         epoch_loss = 0
@@ -36,10 +36,10 @@ def train_model(model, train_loader, loss_fn, optimizer, n_epochs):
             loss.backward()
             optimizer.step()
             epoch_loss += loss.item()
-            loss.append(loss.item())
+            loss_list.append(loss.item())
         logger.info(f"Epoch {epoch+1}/{n_epochs} - Loss: {epoch_loss/len(train_loader):.4f}")
     
-    plt.plot(loss)
+    plt.plot(loss_list)
     plt.title("Loss over epochs")
     plt.xlabel("Epochs")
     plt.ylabel("Loss")

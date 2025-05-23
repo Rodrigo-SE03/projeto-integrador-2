@@ -31,7 +31,7 @@ def get_collection():
     return collection_leituras
 
 def aggregate(collection, pipeline):
-    if not db: raise Exception("Database not initialized. Call init_db() first.")
+    if db == None: raise Exception("Database not initialized. Call init_db() first.")
     result = list(collection.aggregate(pipeline))
     for doc in result:
         doc['_id'] = str(doc['_id'])
