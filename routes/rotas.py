@@ -8,7 +8,7 @@ router = APIRouter()
 
 rota = None
 distancia = None
-origin = (-16.6869, -49.2648)
+origin = (-16.671244161185665, -49.23876761776484)
 limiar = 44.0
 
 
@@ -55,6 +55,7 @@ def calculate():
         rota_points, distancia = genetic_algorithm(points, origin)
         rota =[resultados_dict[(points[i][0], points[i][1])] for i in rota_points]
         logger.info(f"Rota calculada")
+        rota = [{ "_id": "", "distancia": None, "latitude":  origin[0], "longitude": origin[1]}] + rota
         return rota, distancia
         
     except Exception as e:
