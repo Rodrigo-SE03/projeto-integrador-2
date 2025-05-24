@@ -20,7 +20,7 @@ BATCH_SIZE = 32
 HIDDEN_SIZE = 128
 
 #Leitura a cada 15 minutos
-PASSO = 4*24*5  # 4 leituras por hora, 24 horas
+PASSO = 4*24*5 # 4 leituras por hora, 24 horas
 N_STEPS = 4*1*24
 
 def train_model(model, train_loader, loss_fn, optimizer, n_epochs):
@@ -36,13 +36,15 @@ def train_model(model, train_loader, loss_fn, optimizer, n_epochs):
             loss.backward()
             optimizer.step()
             epoch_loss += loss.item()
-            loss_list.append(loss.item())
+
         logger.info(f"Epoch {epoch+1}/{n_epochs} - Loss: {epoch_loss/len(train_loader):.4f}")
+        loss_list.append(epoch_loss/len(train_loader))
     
-    plt.plot(loss_list)
-    plt.title("Loss over epochs")
-    plt.xlabel("Epochs")
-    plt.ylabel("Loss")
+    plt.plot(range(1, n_epochs + 1), loss_list)
+    plt.title("Erro Quadrático Médio (MSE) durante o Treinamento")
+    plt.xlabel("Épocas")
+    plt.ylabel("MSE")
+    plt.xticks(range(1, n_epochs + 1))
 
     if not os.path.exists("ia_models"):
         os.makedirs("ia_models")
@@ -68,14 +70,21 @@ def test_model(model, test_loader, scaler):
     y_test_original = scaler.inverse_transform(truths.squeeze(-1))
     y_pred_original = scaler.inverse_transform(preds)
     logger.info(f"Test RMSE: {root_mean_squared_error(y_test_original, y_pred_original)}")
+    
 
-    accuracy = np.mean(np.abs((y_test_original - y_pred_original) / y_test_original)) * 100
+    epsilon = 1e-4
+    mask = np.abs(y_test_original) > epsilon
+    accuracy = np.mean(np.abs((y_test_original[mask] - y_pred_original[mask]) / y_test_original[mask])) * 100
     logger.info(f"Test Accuracy: {accuracy:.2f}%")
-    plt.plot(y_test_original, label='True')
-    plt.plot(y_pred_original, label='Predicted')
-    plt.title("True vs Predicted")
-    plt.xlabel("Samples")
-    plt.ylabel("Values")
+    
+    y_true_mean = np.mean(y_test_original, axis=0)
+    y_pred_mean = np.mean(y_pred_original, axis=0)
+
+    plt.plot(y_true_mean, label='Curva Real')
+    plt.plot(y_pred_mean, label='Curva Prevista')
+    plt.title("Comparação entre Curva Real e Prevista")
+    plt.xlabel("Passos")
+    plt.ylabel("Valores")
     plt.legend()
 
     if not os.path.exists("ia_models"):
