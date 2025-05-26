@@ -56,12 +56,10 @@ def test_model(model, test_loader, scaler, device):
     mae = np.mean(np.abs(y_test_original - y_pred_original))
     rmse = np.sqrt(np.mean((y_test_original - y_pred_original) ** 2))
     wape = np.sum(np.abs(y_test_original - y_pred_original)) / np.sum(np.abs(y_test_original))
-    r2 = r2_score(y_test_original, y_pred_original)
-
+   
     print(f"RMSE (recursivo): {rmse:.4f}")
     print(f"MAE  (recursivo): {mae:.4f}")
     print(f"WAPE (recursivo): {wape:.4f}")
-    print(f"R²   (recursivo): {r2:.4f}")
 
 
     y_true_mean = np.mean(y_test_original, axis=0)
