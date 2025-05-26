@@ -23,7 +23,7 @@ async def startup_event(_):
     yield
 
 
-app = FastAPI(lifespan=startup_event)
+app = FastAPI(lifespan=startup_event) #type: ignore
 
 app.add_middleware(
     CORSMiddleware,

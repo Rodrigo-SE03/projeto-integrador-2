@@ -6,7 +6,7 @@ from loguru import logger
 import datetime
 
 from utils.localization import obter_endereco
-from database.mongo import get_collection, DESCENDING
+from database.mongo import get_collection
 
 # URL do servidor
 API_URL = 'http://localhost:81'
@@ -194,7 +194,7 @@ async def main():
         G_proj = ox.project_graph(G)
         G_proj = G_proj.to_undirected()
 
-        points_proj = ox.utils_geo.sample_points(G_proj, NUM_SENSORS)
+        points_proj = ox.utils_geo.sample_points(G_proj, NUM_SENSORS) #type: ignore
         points_geo = points_proj.to_crs(epsg=4326)
         points = [[point.x, point.y] for point in points_geo.geometry]
     
@@ -206,7 +206,7 @@ async def main():
                 rua, tipo_zona = obter_endereco(lat, lon)
                 if rua.startswith('.'): rua = rua[1:]
                 if rua != 'Rua não encontrada': break
-                points_proj = ox.utils_geo.sample_points(G_proj, 1)
+                points_proj = ox.utils_geo.sample_points(G_proj, 1) #type: ignore
                 points_geo = points_proj.to_crs(epsg=4326)
                 p = [[point.x, point.y] for point in points_geo.geometry]
                 points[idx] = p[0]
@@ -217,7 +217,9 @@ async def main():
 
     asyncio.create_task(monitor_commands())
     logger.warning("Digite 'pause' para pausar a simulação e 'resume' para retomar.")
-    
+
+    if not timestamp:
+        timestamp = datetime.datetime.now()
     
     while True:
         await pause_event.wait()

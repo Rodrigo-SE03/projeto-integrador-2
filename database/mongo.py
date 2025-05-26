@@ -1,5 +1,6 @@
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
+from pymongo.collection import Collection
 from pymongo import DESCENDING
 from loguru import logger
 
@@ -10,7 +11,7 @@ local_uri = "mongodb://localhost:27017/"
 
 db = None
 collection_leituras = None
-def init_db():
+def init_db() -> Collection:
     global db, collection_leituras
     try: 
         raise Exception("Simulating MongoDB connection error")
@@ -25,9 +26,10 @@ def init_db():
 
     db = client['projeto_integrador']
     collection_leituras = db['leituras']
+    return collection_leituras
 
-def get_collection():
-    if collection_leituras is None: init_db()
+def get_collection() -> Collection:
+    if collection_leituras is None: return init_db()
     return collection_leituras
 
 def aggregate(collection, pipeline):
