@@ -44,7 +44,10 @@ def get_preds(background_tasks: BackgroundTasks, mac = Query(..., alias='mac')):
     
     try:
         pred = predict(lstm_model, lstm_scaler, lstm_le, mac)
-        return {"predicao": pred.tolist()}
+        try:
+            return {"predicao": pred.tolist()}
+        except Exception:
+            return {"predicao": []}
     except ValueError as e:
         logger.error(f"Error in prediction: {e}")
         return Response(status_code=503, content="Not enough data for prediction.")

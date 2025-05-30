@@ -39,7 +39,7 @@ def save_model(model, scaler, le):
 
 
 def load_model():
-    model = torch.load("ia_models/modelo.pt", weights_only=False)
+    model = torch.load("ia_models/modelo.pt", weights_only=False, map_location=torch.device('cpu'))
     model.eval()
     scaler = joblib.load("ia_models/scaler.pkl")
     le = joblib.load("ia_models/le.pkl")

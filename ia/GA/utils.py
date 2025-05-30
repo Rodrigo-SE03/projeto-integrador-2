@@ -35,8 +35,13 @@ def route_distance(route, dist_matrix) -> float:
 def get_distance_matrix(points: np.ndarray, initial=False) -> np.ndarray:
     if initial or len(points) > 59: return haversine(points)
     url = f"https://api.openrouteservice.org/v2/matrix/driving-car"
+    
+    points_correcteds = np.empty_like(points)
+    points_correcteds[:, 0] = points[:, 1]
+    points_correcteds[:, 1] = points[:, 0]
+
     body = {
-        "locations": points.tolist(),
+        "locations": points_correcteds.tolist(),
         "metrics":["distance"], "units":"km"}
     headers = {
         'Accept': 'application/json, application/geo+json, application/gpx+xml, img/png; charset=utf-8',
