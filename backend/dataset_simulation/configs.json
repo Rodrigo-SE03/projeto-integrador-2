@@ -1,0 +1,57 @@
+{   
+    "reading_configs":{
+        "api_url": "http://localhost:81",
+        "max_distance": 110.0,
+        "min_distance_to_clean": 5.0,
+        "pct_to_clean": 0.3,
+        "region_modificator": {
+            "residential": [5, -1],
+            "commercial": [4, -2],
+            "industrial": [7, -3],
+            "retail": [4, -1],
+            "construction": [6, -2],
+            "forest": [1, 0],
+            "farmland": [2, -1],
+            "allotments": [2, -1],
+            "recreation_ground": [1, 0],
+            "military": [3, -1],
+            "quarry": [5, -2],
+            "cemetery": [1, 0],
+            "garages": [4, -1],
+            "brownfield": [6, -3],
+            "greenfield": [1, 0],
+            "plant_nursery": [2, -1],
+            "village_green": [1, 0],
+            "vineyard": [2, -1],
+            "orchard": [2, -1],
+            "greenhouse_horticulture": [2, -1],
+            "salt_pond": [3, -1],
+            "reservoir": [1, 0],
+            "landfill": [8, -4],
+            "port": [5, -2]
+        },
+
+        "region_modificator_default": [4, -1]
+    },
+    
+    "configs":{
+        
+        "num_sensors": 20,
+        "wait_time": 5,
+        "verbose": false
+    },
+
+    "ticks":{
+        "tick_days": 0,
+        "tick_hours": 0,
+        "tick_minutes": 15,
+        "tick_seconds": 0
+    },
+
+    "coordinates": {
+        "latitude": -16.6869,
+        "longitude": -49.2648,
+        "latitude_range": 0.06,
+        "longitude_range": 0.06
+    }
+}
